@@ -1,4 +1,4 @@
-<!DOCTYPE html><!DOCTYPE html>
+<!DOCTYPE html><!DOCTYPE html><!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -312,8 +312,8 @@
         </div>
     </main>
     
-    <!-- AUDIO: Tu archivo miaudio.mp3 -->
-    <audio id="sound" preload="auto" loop>
+    <!-- AUDIO: Tu archivo miaudio.mp3 con configuración avanzada -->
+    <audio id="sound" preload="auto" loop muted>
         <source src="./miaudio.mp3" type="audio/mpeg">
         Tu navegador no soporta audio HTML5.
     </audio>
@@ -372,21 +372,53 @@
             let audioPlaying = false;
             const esMovil = window.innerWidth <= 768;
 
-            // Función para manejar audio
+            // Función mejorada para manejar audio automático
             function reproducirAudio() {
                 if (sonido && !audioPlaying) {
-                    sonido.play().then(() => {
-                        audioPlaying = true;
-                        audioButton.textContent = '🔇 Pausar música';
-                    }).catch(error => {
-                        console.log("Error reproduciendo audio:", error);
-                        // Mostrar botón manual si falla reproducción automática
-                        audioButton.classList.add('show');
-                    });
+                    // Configurar volumen y propiedades antes de reproducir
+                    sonido.volume = 0.7;
+                    sonido.muted = false;
+                    
+                    const playPromise = sonido.play();
+                    
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            audioPlaying = true;
+                            console.log("Audio reproduciendo correctamente");
+                        }).catch(error => {
+                            console.log("Reproducción bloqueada, usando técnica alternativa:", error);
+                            // Técnica alternativa: reproducir con volumen 0 primero
+                            intentarReproduccionAlternativa();
+                        });
+                    }
                 } else if (sonido && audioPlaying) {
                     sonido.pause();
                     audioPlaying = false;
-                    audioButton.textContent = '🎵 Reproducir música';
+                }
+            }
+
+            // Técnica alternativa para móviles
+            function intentarReproduccionAlternativa() {
+                // Crear contexto de audio para bypass
+                try {
+                    sonido.muted = true;
+                    sonido.play().then(() => {
+                        // Una vez que empiece muted, quitar mute después de un momento
+                        setTimeout(() => {
+                            sonido.muted = false;
+                            sonido.volume = 0.7;
+                            audioPlaying = true;
+                        }, 100);
+                    }).catch(() => {
+                        // Si todo falla, mostrar botón pero hidden inicialmente
+                        audioButton.style.opacity = '0';
+                        audioButton.classList.add('show');
+                        setTimeout(() => {
+                            audioButton.style.opacity = '1';
+                        }, 2000);
+                    });
+                } catch (error) {
+                    console.log("Técnica alternativa falló:", error);
                 }
             }
 
@@ -458,6 +490,11 @@
                 // No hacer nada si se hace click en el botón de audio
                 if (clickEnBoton) return;
                 
+                // TRUCO: En el primer click del usuario, habilitar audio
+                if (!audioPlaying) {
+                    habilitarAudioEnPrimerClick();
+                }
+                
                 if (!cartaAbierta) {
                     if (clickEnSobre && !clickEnSobre.classList.contains('abierto')) {
                         gestionarAnimacion('abrir');
@@ -468,6 +505,20 @@
                     }
                 }
             });
+
+            // Función para habilitar audio en primer click
+            function habilitarAudioEnPrimerClick() {
+                if (sonido && !audioPlaying) {
+                    // Reproducir silenciosamente primero para "unlock" el audio
+                    sonido.volume = 0;
+                    sonido.play().then(() => {
+                        sonido.pause();
+                        sonido.currentTime = 0;
+                        sonido.volume = 0.7;
+                        console.log("Audio desbloqueado para reproducción automática");
+                    }).catch(e => console.log("No se pudo desbloquear audio:", e));
+                }
+            }
 
             function crearCorazones() {
                 if (!envoltura.classList.contains('abierto') || envoltura.classList.contains('cerrando')) return;
