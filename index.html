@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!DOCTYPE html><!DOCTYPE html>
 <html lang="es">
 <head>
     <meta charset="UTF-8">
@@ -60,15 +60,14 @@
             background-size: cover; background-position: center;
             background-blend-mode: screen; overflow: hidden;
             
-            /* --- BLOQUEO DE SELECCIÓN (NUEVO) --- */
-            -webkit-user-select: none; /* Safari */
-            -moz-user-select: none;    /* Firefox */
-            -ms-user-select: none;     /* Internet Explorer/Edge */
-            user-select: none;         /* Estándar */
-            -webkit-tap-highlight-color: transparent; /* Evita el destello al tocar en móviles */
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
+            -webkit-tap-highlight-color: transparent;
         }
         
-        .main-content { /* Contenedor para mover título y sobre juntos */
+        .main-content {
             display: flex; flex-direction: column; align-items: center;
             transition: transform 0.5s ease;
         }
@@ -90,10 +89,9 @@
         
         .envoltura-sobre.abierto, .envoltura-sobre.cerrando { animation: none; }
 
-        /* --- LATIDO DE CARTA INCREMENTADO (MODIFICADO) --- */
         @keyframes latido {
             0%, 100% { transform: scale(1); }
-            50% { transform: scale(1.07); } /* Aumentado de 1.05 a 1.07 */
+            50% { transform: scale(1.07); }
         }
 
         .sobre {
@@ -156,15 +154,13 @@
             animation: temblor-corazon 0.4s linear infinite;
         }
 
-        /* --- EFECTO DE TEMBLOR INCREMENTADO (MODIFICADO) --- */
         @keyframes temblor-corazon {
             0% { transform: translate(-50%, -70%) rotate(45deg) scale(1.0); }
-            25% { transform: translate(-50%, -70%) rotate(42deg) scale(1.1); } /* Rotación y escala aumentadas */
-            50% { transform: translate(-50%, -70%) rotate(45deg) scale(1.2); } /* Escala máxima aumentada */
-            75% { transform: translate(-50%, -70%) rotate(48deg) scale(1.1); } /* Rotación y escala aumentadas */
+            25% { transform: translate(-50%, -70%) rotate(42deg) scale(1.1); }
+            50% { transform: translate(-50%, -70%) rotate(45deg) scale(1.2); }
+            75% { transform: translate(-50%, -70%) rotate(48deg) scale(1.1); }
             100% { transform: translate(-50%, -70%) rotate(45deg) scale(1.0); }
         }
-
 
         .carta {
             position: fixed; top: 50%; left: 50%;
@@ -229,11 +225,22 @@
         .imagen-recuerdo {
             width: 150px; height: auto; border-radius: 8px;
         }
+
+        /* Botón de audio para móviles */
+        .audio-button {
+            position: fixed; top: 20px; right: 20px; z-index: 9999;
+            background: var(--color-sello); color: white; border: none;
+            padding: 12px 20px; border-radius: 25px; cursor: pointer;
+            font-family: var(--fuente-carta); font-size: 16px;
+            box-shadow: 0 4px 15px rgba(0,0,0,0.2);
+            transition: all 0.3s ease; display: none;
+        }
+        .audio-button:hover { transform: scale(1.05); }
+        .audio-button.show { display: block; }
         
         @media (max-width: 768px) {
-            /* --- AJUSTE DE POSICIÓN EN MÓVILES (NUEVO) --- */
             .main-content {
-                transform: translateY(-5vh); /* Sube todo el contenido un 5% de la altura de la pantalla */
+                transform: translateY(-5vh);
             }
 
             h1 { font-size: 2.9rem; }
@@ -246,7 +253,7 @@
             .bloque-firma {
                 flex-direction: column;
                 align-items: center;
-                gap: 2opx;
+                gap: 20px;
             }
             .imagen-recuerdo {
                 order: 0;
@@ -254,7 +261,6 @@
                 max-width: 100px;
             }
         }
-
 
         .corazon-magico {
             position: fixed; font-size: var(--fs);
@@ -300,14 +306,20 @@
                             <img src="https://drive.google.com/thumbnail?id=10-wTkuaxmCDhw6vYLEMK7DG21-b82A9b&sz=w1000" alt="Foto de recuerdo" class="imagen-recuerdo">
                             <p class="firma">TE AMO, Con amor infinito, Humberto</p>
                         </div>
-
                     </div>
                 </div>
             </div>
         </div>
     </main>
     
-    <audio id="sound" src="https://www.dropbox.com/scl/fi/rktv4a8t47zc90ujoc6ra/Marc-Segu-Pol-Granch-Tiroteo-Videoclip-Oficial.mp3?rlkey=3v4lnzhce87xhbtrlhi24qslm&st=rfas5idr&dl=1" type="audio/mpeg" preload="auto"></audio>
+    <!-- AUDIO: Tu archivo miaudio.mp3 -->
+    <audio id="sound" preload="auto" loop>
+        <source src="./miaudio.mp3" type="audio/mpeg">
+        Tu navegador no soporta audio HTML5.
+    </audio>
+
+    <!-- Botón de audio para móviles -->
+    <button id="audioButton" class="audio-button">🎵 Reproducir música</button>
 
     <script>
         window.addEventListener('load', () => {
@@ -353,10 +365,36 @@
             const envoltura = document.querySelector(".envoltura-sobre");
             const carta = document.querySelector(".carta");
             const sonido = document.getElementById("sound");
+            const audioButton = document.getElementById("audioButton");
             
             let isAnimating = false;
             let cartaAbierta = false;
+            let audioPlaying = false;
             const esMovil = window.innerWidth <= 768;
+
+            // Función para manejar audio
+            function reproducirAudio() {
+                if (sonido && !audioPlaying) {
+                    sonido.play().then(() => {
+                        audioPlaying = true;
+                        audioButton.textContent = '🔇 Pausar música';
+                    }).catch(error => {
+                        console.log("Error reproduciendo audio:", error);
+                        // Mostrar botón manual si falla reproducción automática
+                        audioButton.classList.add('show');
+                    });
+                } else if (sonido && audioPlaying) {
+                    sonido.pause();
+                    audioPlaying = false;
+                    audioButton.textContent = '🎵 Reproducir música';
+                }
+            }
+
+            // Event listener para botón de audio
+            audioButton.addEventListener('click', (e) => {
+                e.stopPropagation();
+                reproducirAudio();
+            });
 
             function gestionarAnimacion(accion) {
                 if (isAnimating) return;
@@ -364,7 +402,9 @@
 
                 if (accion === 'abrir') {
                     envoltura.classList.add('abierto');
-                    sonido.play().catch(e => console.log("La reproducción automática fue bloqueada."));
+                    
+                    // Intentar reproducir audio
+                    reproducirAudio();
                     
                     if (esMovil) {
                         setTimeout(() => {
@@ -378,7 +418,10 @@
                     carta.addEventListener('animationend', () => {
                         isAnimating = false;
                         cartaAbierta = true;
+                        // Mostrar botón de audio siempre después de abrir
+                        audioButton.classList.add('show');
                     }, { once: true });
+                    
                     setTimeout(crearCorazones, 800);
 
                 } else if (accion === 'cerrar') {
@@ -389,10 +432,14 @@
                     void carta.offsetWidth;
                     
                     envoltura.classList.add('cerrando');
-                    if(sonido) {
-                      sonido.pause();
-                      sonido.currentTime = 0;
+                    
+                    // Pausar audio al cerrar
+                    if (sonido && audioPlaying) {
+                        sonido.pause();
+                        audioPlaying = false;
+                        audioButton.textContent = '🎵 Reproducir música';
                     }
+                    audioButton.classList.remove('show');
 
                     carta.addEventListener('animationend', () => {
                         envoltura.classList.remove('abierto', 'cerrando');
@@ -406,14 +453,16 @@
                 if (isAnimating) return;
                 const clickEnSobre = e.target.closest('.envoltura-sobre');
                 const clickEnCarta = e.target.closest('.carta');
+                const clickEnBoton = e.target.closest('.audio-button');
+                
+                // No hacer nada si se hace click en el botón de audio
+                if (clickEnBoton) return;
                 
                 if (!cartaAbierta) {
                     if (clickEnSobre && !clickEnSobre.classList.contains('abierto')) {
                         gestionarAnimacion('abrir');
                     }
                 } else {
-                    /* --- LÓGICA DE CIERRE RESTAURADA (MODIFICADO) --- */
-                    // Permite cerrar la carta tocando DENTRO en móviles, o FUERA en cualquier dispositivo.
                     if ((esMovil && clickEnCarta) || !clickEnCarta) {
                         gestionarAnimacion('cerrar');
                     }
